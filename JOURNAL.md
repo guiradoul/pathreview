@@ -67,3 +67,13 @@ weights = vector 0.8 / keyword 0.2
 ```
 
 **What this proves:** at 50/50, the README chunk wins purely on its BM25 keyword score (`kw=1.000`) despite the resume chunk being the better semantic match (`vec=1.000`) — exactly the wrong-document retrieval the issue describes. Shifting weight toward vector similarity (0.8/0.2) reverses the ranking, confirming both the root cause and the fix location.
+
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** [https://github.com/guiradoul/pathreview/commit/1733d798c9f0539ec4fc9ed5ce948b9e1d3f6e02]
+
+**Reproduction summary:**
+I drove the real `HybridRetriever.retrieve()` blend (via `scripts/repro_issue_24.py`, using lightweight fakes so only the scoring step is under test) with the query "React" against two chunks — a semantically-relevant resume chunk and a keyword-stuffed but irrelevant README chunk. At the issue's 50/50 weighting the wrong README chunk ranked #1 (final 0.794 vs 0.667) purely on its BM25 score, confirming the bug lives in the fixed-weight blend in `rag/retriever/hybrid.py`.
+
+**PLAN.md link:** [https://github.com/guiradoul/pathreview/blob/fix/24-hybrid-scoring-weight-tuning/PLAN.md]
