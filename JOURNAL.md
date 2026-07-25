@@ -34,3 +34,36 @@ A successfull fix is to rebalance that 50/50 to trust vector similarity more, or
 **Setup confirmation:** [App runs locally at localhost:5173]
 
 **Cohort ledger:** [Issue added to cohort ledger]
+
+**Issue 24 Reproduction:**
+
+*Goal: show the issue is real and pin down exactly where it lives (the score blend in `rag/retriever/hybrid.py`).*
+
+**Where it lives:** `rag/retriever/hybrid.py` — `HybridRetriever.retrieve()`, the blend at
+`blended_score = self.vector_weight * vector_score + self.keyword_weight * keyword_score`.
+
+**Repro script:** `scripts/repro_issue_24.py`. It exercises the *real* `retrieve()` method with lightweight fakes for the vector store and keyword searcher, so no ChromaDB or embeddings are needed — the only thing under test is the scoring blend.
+
+**Steps:**
+
+1. From the repo root, run: `.venv/bin/python scripts/repro_issue_24.py`
+2. The script sets up one query, `"React"`, and two chunks:
+   - `resume-1` (**correct** doc) — high vector similarity (0.85), low BM25 (3.0): mentions React once, in context.
+   - `readme-1` (**wrong** doc) — low vector similarity (0.50), high BM25 (9.0): keyword-stuffed with "react".
+3. It runs the blend twice — once at the issue's **50/50** weights, once at the proposed **0.8/0.2** fix — and prints the ranking each time.
+
+**Observed output:**
+
+```
+weights = vector 0.5 / keyword 0.5
+  #1  readme-1  doc=readme  final=0.794  (vec=0.588 kw=1.000)
+  #2  resume-1  doc=resume  final=0.667  (vec=1.000 kw=0.333)
+  => top result: readme-1 — WRONG doc on top (bug)
+
+weights = vector 0.8 / keyword 0.2
+  #1  resume-1  doc=resume  final=0.867  (vec=1.000 kw=0.333)
+  #2  readme-1  doc=readme  final=0.671  (vec=0.588 kw=1.000)
+  => top result: resume-1 — correct doc on top
+```
+
+**What this proves:** at 50/50, the README chunk wins purely on its BM25 keyword score (`kw=1.000`) despite the resume chunk being the better semantic match (`vec=1.000`) — exactly the wrong-document retrieval the issue describes. Shifting weight toward vector similarity (0.8/0.2) reverses the ranking, confirming both the root cause and the fix location.
