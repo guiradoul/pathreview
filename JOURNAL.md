@@ -77,3 +77,42 @@ weights = vector 0.8 / keyword 0.2
 I drove the real `HybridRetriever.retrieve()` blend (via `scripts/repro_issue_24.py`, using lightweight fakes so only the scoring step is under test) with the query "React" against two chunks — a semantically-relevant resume chunk and a keyword-stuffed but irrelevant README chunk. At the issue's 50/50 weighting the wrong README chunk ranked #1 (final 0.794 vs 0.667) purely on its BM25 score, confirming the bug lives in the fixed-weight blend in `rag/retriever/hybrid.py`.
 
 **PLAN.md link:** [https://github.com/guiradoul/pathreview/blob/fix/24-hybrid-scoring-weight-tuning/PLAN.md]
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+[I have already implemented the fix and was working on the unit test]
+
+**Next steps:**
+[I was working on the unit test for the rest of the week]
+
+**Blockers:**
+[]
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** [https://github.com/ascherj/pathreview/pull/184]
+
+**Branch:** [`fix/24-hybrid-scoring-weight-tuning`]
+
+**What you built:**
+Rebalanced the hybrid retriever's score blend in `rag/retriever/hybrid.py` from an equal weighting to `vector_weight=0.8 / keyword_weight=0.2`, so `HybridRetriever.retrieve()` weights semantic (vector) similarity more heavily than the BM25 keyword score. This stops keyword-only matches on shared technology names (e.g. "React", "Python") from riding wrong-document chunks to the top of the results — and therefore out of the context handed to the LLM. Also added `tests/unit/test_hybrid_retriever.py` to lock in the corrected ranking and guard against a regression back to the 50/50 behavior.
+
+**Tests added or updated:**
+Added `tests/unit/test_hybrid_retriever.py` (new — there was no existing coverage for `HybridRetriever`). It drives the real `retrieve()` blend with lightweight fakes for the vector store and keyword searcher, so only the scoring step is under test. The 8 tests cover:
+
+- **The fix** — at the tuned 0.8/0.2 weights the semantically-relevant chunk ranks #1.
+- **Regression guard** — at 50/50 the keyword-stuffed wrong-document chunk wins, locking in the reproduced bug so a revert to equal weights fails CI.
+- **Blend math** — the blended score equals `weight·normalized-vector + weight·normalized-keyword`.
+- **Weight edge cases** — pure-vector (keyword weight 0) and pure-keyword (vector weight 0) modes.
+- **Robustness** — empty vector/keyword results return `[]` with no divide-by-zero, a chunk present in only one retriever scores 0.0 on the other side, and the `min_score` threshold filters low-blend chunks.
+
+All 8 pass (`.venv/bin/pytest tests/unit/test_hybrid_retriever.py`).
+
+**Self-review confirmation:** [x] make check passes  [x] make test-unit passes
+
+**Draft PR feedback received from:** ["none"]
