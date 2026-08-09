@@ -116,3 +116,35 @@ All 8 pass (`.venv/bin/pytest tests/unit/test_hybrid_retriever.py`).
 **Self-review confirmation:** [x] make check passes  [x] make test-unit passes
 
 **Draft PR feedback received from:** ["none"]
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+[no review came in.]
+
+**How you responded:**
+[ ]
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+[Another Person was working on the same issue. That fix was merged when I was in the middle of implementing my fix with a different solution. I have made a comment in my PR proposing my fix as 0.8/0.2 is a defensible, safe-margin choice.]
+
+**What did you learn about working in a large codebase?**
+[For someone else's production code there are rules to follow and code review process is involved. For 
+my own project I set all the rules. There is no PR review process in personel project.]
+
+**How did AI tools help — and where did they fall short?**
+[AI assistance were most useful when it comes to understanding the codebase and implementing the actual fix. I needed to discuss and find a convincing answer for the reviewer to accept my proposed fix.]
+
+**What would you do differently if you started over?**
+[When it comes to the issue selection I would make sure none is working or will be working on my selected issue.]
+
+**What are you most proud of from this module?**
+[This module simulates and end to end process of fixing and issue in a production codebase and I was able to completed.]
